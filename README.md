@@ -1,8 +1,3 @@
-<img width="774" height="531" alt="Capture" src="https://github.com/user-attachments/assets/4f01b9d3-f33c-4d51-b4aa-cd87c9d3aecf" />
-
-<img width="785" height="568" alt="Capture2" src="https://github.com/user-attachments/assets/02200f6e-dbf1-4c3e-9754-7e63b7696746" />
-
-
 # 🖼️ Image Caption Generator
 
 An end-to-end **Image Captioning** application that generates a natural-language description for an uploaded image.
