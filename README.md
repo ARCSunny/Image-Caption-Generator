@@ -705,130 +705,19 @@ gunicorn
 
 The exact start command depends on the hosting provider.
 
-# ⚠️ Important Deployment Considerations
-
-## 1. PyTorch model size
-
-The `.pt` checkpoint files are relatively large compared with normal web assets.
-
-Make sure the selected hosting platform supports:
-
-- Large deployment artifacts
-- Enough RAM
-- PyTorch installation
-- Reasonable startup time
-
-## 2. CPU inference
-
-The application automatically uses:
-
-```python
-torch.device("cuda" if torch.cuda.is_available() else "cpu")
-```
-
-Therefore:
-
-- GPU environments use CUDA
-- CPU-only environments use CPU inference
-
-CPU inference will generally be slower than GPU inference.
-
-## 3. Model loading
-
-The model is loaded lazily.
-
-The first caption request triggers:
-
-```text
-load checkpoint
-        ↓
-load vocabulary
-        ↓
-initialize model
-        ↓
-load weights
-        ↓
-generate caption
-```
-
-After that, the loaded model remains in memory for subsequent requests.
-
-This avoids loading the model from disk for every uploaded image.
-
-## 4. ResNet-50 pretrained weights
-
-The model constructor initializes ResNet-50 with ImageNet pretrained weights:
-
-```python
-models.ResNet50_Weights.IMAGENET1K_V2
-```
-
-If the pretrained weights are not already cached in the deployment environment, torchvision may need network access to obtain them during the first model initialization.
-
-For a controlled production deployment, consider ensuring the required pretrained weights are available in the environment/cache or adapting the model-loading process accordingly.
-
-## 5. File uploads
-
-The current API reads uploaded images into memory:
-
-```python
-Image.open(io.BytesIO(file.read()))
-```
-
-For a public production service, consider adding:
-
-- Maximum upload size
-- File-type validation
-- Rate limiting
-- Request timeouts
-- Authentication if required
-- Logging
-- Error monitoring
-
----
-
-# 🔐 Security Notes
-
-This project is primarily a machine-learning demonstration/application.
-
-Before exposing it publicly, consider implementing:
-
-- Maximum image upload size
-- Strict MIME/type validation
-- Safe image decoding
-- Rate limiting
-- Reverse proxy configuration
-- HTTPS
-- Production logging
-- Error handling
-- Resource limits
-- Optional authentication/API keys
-
-Do not expose development/debug settings in a production environment.
-
-In particular, change:
-
-```python
-debug=True
-```
-
-for a production deployment.
-
----
-
-# 📈 Training Details
+## 📈 Training Details
 
 The training loop performs standard autoregressive language-model training.
 
 For each caption:
 
-```text
+```
 <sos> a dog runs <eos>
 ```
 
 the input and target sequences are shifted:
 
-```text
+```
 Input:
 <sos> a dog runs
 
@@ -840,7 +729,7 @@ The model predicts the next token at every position.
 
 The loss is calculated using:
 
-```python
+```
 nn.CrossEntropyLoss(
     ignore_index=pad_idx,
     label_smoothing=label_smoothing
@@ -851,19 +740,17 @@ Padding tokens do not contribute to the loss.
 
 Gradient clipping is also applied:
 
-```text
+```
 max_norm = 5.0
 ```
 
----
-
-# 🛑 Early Stopping
+## 🛑 Early Stopping
 
 The training process monitors validation loss.
 
 When validation loss improves:
 
-```text
+```
 best.pt
 ```
 
@@ -873,41 +760,37 @@ If validation loss does not improve for the configured number of epochs, trainin
 
 Default:
 
-```text
+```
 early_stopping_patience = 4
 ```
 
 This reduces unnecessary training once validation performance stops improving.
 
----
-
-# 🔄 Fine-Tuning the CNN
+## 🔄 Fine-Tuning the CNN
 
 There are two ways to fine-tune the ResNet backbone.
 
-## Fine-tune from the beginning
+### Fine-tune from the beginning
 
-```bash
+```
 python train.py --fine_tune_cnn
 ```
 
-## Unfreeze at a later epoch
+### Unfreeze at a later epoch
 
 Example:
 
-```bash
+```
 python train.py --fine_tune_start_epoch 8
 ```
 
 The second approach keeps the pretrained CNN frozen initially and begins fine-tuning later using the smaller:
 
-```text
+```
 fine_tune_lr = 1e-5
 ```
 
----
-
-# 🧩 Main Files
+## 🧩 Main Files
 
 | File | Purpose |
 |---|---|
@@ -923,15 +806,14 @@ fine_tune_lr = 1e-5
 | `checkpoints/last.pt` | Latest training checkpoint |
 | `checkpoints/vocab.pkl` | Saved vocabulary |
 
----
 
-# 🧱 Core Classes
+## 🧱 Core Classes
 
-## `CNNEncoder`
+### `CNNEncoder`
 
 Located in:
 
-```text
+```
 model/caption_model.py
 ```
 
@@ -943,7 +825,7 @@ Responsibilities:
 - Project 2048-dimensional features into the Transformer embedding space
 - Optionally fine-tune the CNN backbone
 
-## `TransformerDecoder`
+### `TransformerDecoder`
 
 Responsibilities:
 
@@ -954,11 +836,11 @@ Responsibilities:
 - Padding masking
 - Vocabulary prediction
 
-## `ImageCaptionModel`
+### `ImageCaptionModel`
 
 Combines:
 
-```text
+```
 CNNEncoder + TransformerDecoder
 ```
 
@@ -968,11 +850,11 @@ and provides:
 - Greedy caption generation
 - Beam-search caption generation
 
-## `Vocabulary`
+### `Vocabulary`
 
 Located in:
 
-```text
+```
 data/dataset.py
 ```
 
@@ -983,7 +865,7 @@ Responsibilities:
 - Numericalization
 - Saving/loading vocabulary mappings
 
-## `FlickrDataset`
+### `FlickrDataset`
 
 Responsibilities:
 
@@ -992,22 +874,20 @@ Responsibilities:
 - Apply transformations
 - Convert captions into token IDs
 
-## `CapCollate`
+### `CapCollate`
 
 Responsibilities:
 
 - Combine image tensors into batches
 - Pad captions to a common sequence length
 
----
+## 🧰 Troubleshooting
 
-# 🧰 Troubleshooting
-
-## `FileNotFoundError: No trained checkpoint found`
+### `FileNotFoundError: No trained checkpoint found`
 
 Make sure:
 
-```text
+```
 checkpoints/best.pt
 checkpoints/vocab.pkl
 ```
@@ -1016,112 +896,100 @@ exist.
 
 Or configure:
 
-```text
+```
 CHECKPOINT_PATH
 VOCAB_PATH
 ```
 
 with the correct paths.
 
----
-
-## `ModuleNotFoundError: No module named 'data'`
+### `ModuleNotFoundError: No module named 'data'`
 
 The current Python imports expect:
 
-```text
+```
 data/
 └── dataset.py
 ```
 
 Make sure `dataset.py` is inside the `data` package and that the package contains:
 
-```text
+```
 data/__init__.py
 ```
 
----
-
-## `ModuleNotFoundError: No module named 'model'`
+### `ModuleNotFoundError: No module named 'model'`
 
 The current code expects:
 
-```text
+```
 model/
 └── caption_model.py
 ```
 
 Create:
 
-```text
+```
 model/__init__.py
 ```
 
 and place `caption_model.py` inside the `model` directory.
 
----
-
-## `TemplateNotFound: index.html`
+### `TemplateNotFound: index.html`
 
 Flask's:
 
-```python
+```
 render_template("index.html")
 ```
 
 expects:
 
-```text
+```
 templates/index.html
 ```
 
 Therefore the recommended structure is:
 
-```text
+```
 templates/
 └── index.html
 ```
 
----
-
-## `CUDA out of memory`
+### `CUDA out of memory`
 
 Try a smaller batch size during training:
 
-```bash
+```
 python train.py --batch_size 16
 ```
 
 or:
 
-```bash
+```
 python train.py --batch_size 8
 ```
 
 For inference, CPU mode is automatically used when CUDA is unavailable.
 
----
-
-## Training is interrupted
+### Training is interrupted
 
 Resume from:
 
-```text
+```
 checkpoints/last.pt
 ```
 
 Example:
 
-```bash
+```
 python train.py \
     --resume checkpoints/last.pt
 ```
 
 Use the same dataset and compatible training configuration.
 
----
-
-## The model generates poor captions
+### The model generates poor captions
 
 Caption quality depends on several factors, including:
 
@@ -1137,11 +1005,7 @@ Caption quality depends on several factors, including:
 
 A lower validation loss does not automatically mean every individual generated caption will be linguistically or semantically perfect.
 
----
-
-# 📊 Current Model Limitations
-
-This implementation is a practical image-captioning project rather than a large-scale production vision-language model.
+## 📊 Current Model Limitations
 
 Known limitations include:
 
@@ -1157,9 +1021,7 @@ Known limitations include:
 - Caption quality is dependent on the training dataset and learned checkpoint.
 - The current frontend is a simple single-page interface rather than a full user-management system.
 
----
-
-# 🔮 Possible Future Improvements
+## 🔮 Possible Future Improvements
 
 Potential improvements include:
 
@@ -1187,106 +1049,11 @@ Potential improvements include:
 - Add a health-check endpoint such as `/health`
 - Add structured logging
 
----
-
-# 🧪 Suggested Production Health Check
-
-A future production version could expose:
-
-```http
-GET /health
-```
-
-and return:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-This can be used by a hosting platform to determine whether the application is running.
-
----
-
-# 📜 Git and Large Files
-
-The trained `.pt` files are binary model artifacts and can be large.
-
-If the checkpoints are too large for normal GitHub repository limits, consider using:
-
-- Git LFS
-- GitHub Releases
-- Cloud object storage
-- Model hosting/storage services
-
-Do not commit large training datasets to the repository unless their licensing and repository limits make that appropriate.
-
-A typical `.gitignore` can include:
-
-```gitignore
-.venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-
-# Local datasets
-data/images/
-
-# Training outputs
-runs/
-logs/
-
-# Optional: ignore checkpoints if they are stored externally
-# checkpoints/*.pt
-# checkpoints/*.pkl
-```
-
-If the trained checkpoints are required for the public deployment, store them in an appropriate model-storage solution or use Git LFS where suitable.
-
----
-
-# 📄 License
-
-Add your project's license here.
-
-For example:
-
-```text
-MIT License
-```
-
-Do not claim a license unless you have intentionally chosen it for this project.
-
-Also verify the licensing terms of the datasets, pretrained model weights, and any third-party assets before redistributing them.
-
----
-
-# 👨‍💻 Author
-
-**Your Name**
-
-GitHub:
-
-```text
-https://github.com/YOUR_USERNAME
-```
-
-Project repository:
-
-```text
-https://github.com/YOUR_USERNAME/YOUR_REPOSITORY
-```
-
-Replace the placeholders above with your actual information.
-
----
-
-# ⭐ Project Summary
+## ⭐ Project Summary
 
 This project demonstrates a complete deep-learning image-captioning workflow:
 
-```text
+```
 Flickr30k Dataset
        │
        ▼
@@ -1319,5 +1086,3 @@ Web Interface
        ▼
 Generated Image Caption
 ```
-
-The project therefore covers the complete path from **dataset preparation and model training to saved checkpoints, inference, REST API integration, browser-based interaction, and online deployment**.
