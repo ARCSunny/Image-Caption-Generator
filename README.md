@@ -25,7 +25,7 @@ The project includes:
 
 The application follows this pipeline:
 
-```text
+```
 User uploads an image
         │
         ▼
@@ -60,11 +60,9 @@ For example, an input image might produce a caption similar to:
 
 The exact caption depends on the training data, vocabulary, learned weights, and image content.
 
----
+## ✨ Features
 
-# ✨ Features
-
-## 1. Image Upload
+### 1. Image Upload
 
 The web interface supports:
 
@@ -76,7 +74,7 @@ The web interface supports:
 - Uploading another image
 - Error messages when the server or image is unavailable
 
-## 2. Deep Learning Architecture
+### 2. Deep Learning Architecture
 
 The model uses:
 
@@ -105,11 +103,11 @@ Default configuration:
 
 The training script can override these values through command-line arguments.
 
-## 3. Beam Search
+### 3. Beam Search
 
 Inference uses:
 
-```text
+```
 Beam width = 5
 Maximum generated length = 30 tokens
 ```
@@ -118,11 +116,11 @@ Beam search keeps multiple candidate captions while generating the sentence inst
 
 The implementation also applies a length penalty when comparing candidate sequences.
 
-## 4. Checkpointing
+### 4. Checkpointing
 
 Training saves:
 
-```text
+```
 checkpoints/
 ├── best.pt
 ├── last.pt
@@ -145,13 +143,13 @@ The serialized vocabulary required to convert generated token IDs back into word
 
 ---
 
-# 🧠 Model Architecture
+## 🧠 Model Architecture
 
-## Encoder: ResNet-50
+### Encoder: ResNet-50
 
 The project initializes:
 
-```python
+```
 models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
 ```
 
@@ -159,27 +157,25 @@ The final two ResNet stages are removed from the classification network so that 
 
 The resulting feature tensor has the general form:
 
-```text
+```
 Batch × Channels × Height × Width
 ```
 
 The code then changes it to:
 
-```text
+```
 Batch × (Height × Width) × Channels
 ```
 
 and projects:
 
-```text
+```
 2048 → 512
 ```
 
 This produces a sequence of visual embeddings that can be consumed by the Transformer decoder.
 
----
-
-## Decoder: Transformer
+### Decoder: Transformer
 
 The Transformer receives:
 
@@ -200,7 +196,7 @@ During training, a causal mask prevents a token from attending to future caption
 
 Conceptually:
 
-```text
+```
 Image
   │
   ▼
@@ -221,9 +217,7 @@ Token Embedding        Transformer Decoder
                       Next-token prediction
 ```
 
----
-
-# 📚 Dataset
+## 📚 Dataset
 
 The training pipeline is designed around the **Flickr30k** image-caption dataset.
 
