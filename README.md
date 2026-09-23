@@ -223,7 +223,7 @@ The training pipeline is designed around the **Flickr30k** image-caption dataset
 
 The provided training notebook uses the Flickr30k dataset and points to:
 
-```text
+```
 flickr30k_images/
 └── flickr30k_images/
 
@@ -236,7 +236,7 @@ The project does not hard-code a single CSV column name. `dataset.py` searches f
 
 ### Image columns
 
-```text
+```
 image
 image_name
 filename
@@ -247,7 +247,7 @@ img
 
 ### Caption columns
 
-```text
+```
 caption
 comment
 text
@@ -258,9 +258,7 @@ description
 
 This makes the data loader more tolerant of different caption-file formats.
 
----
-
-# 📝 Vocabulary
+## 📝 Vocabulary
 
 The `Vocabulary` class creates a word-to-index and index-to-word mapping.
 
@@ -275,7 +273,7 @@ Four special tokens are always present:
 
 The default frequency threshold is:
 
-```text
+```
 5
 ```
 
@@ -283,25 +281,23 @@ Only words occurring at least five times in the training captions are added to t
 
 Words outside the vocabulary are represented using:
 
-```text
+```
 <unk>
 ```
 
 The vocabulary is saved as:
 
-```text
+```
 checkpoints/vocab.pkl
 ```
 
----
+## 🖼️ Image Preprocessing
 
-# 🖼️ Image Preprocessing
-
-## Training Transform
+### Training Transform
 
 Training images use:
 
-```text
+```
 Resize → 256 × 256
 Random Crop → 224 × 224
 Random Horizontal Flip
@@ -311,16 +307,16 @@ ImageNet normalization
 
 ImageNet normalization:
 
-```text
+```
 Mean = [0.485, 0.456, 0.406]
 Std  = [0.229, 0.224, 0.225]
 ```
 
-## Evaluation Transform
+### Evaluation Transform
 
 Inference images use:
 
-```text
+```
 Resize → 224 × 224
 ToTensor
 ImageNet normalization
@@ -328,24 +324,22 @@ ImageNet normalization
 
 The same evaluation transform is used when generating captions from individual images.
 
----
-
-# 🏋️ Training
+## 🏋️ Training
 
 The main training script is:
 
-```text
+```
 train.py
 ```
 
 It automatically selects:
 
-```text
+```
 CUDA GPU → if available
 CPU     → otherwise
 ```
 
-## Default training configuration
+### Default training configuration
 
 | Argument | Default |
 |---|---:|
@@ -370,15 +364,13 @@ CPU     → otherwise
 
 The actual maximum sequence length is automatically increased if the training dataset contains a caption longer than the requested maximum.
 
----
-
-# 🔧 Training Strategy
+## 🔧 Training Strategy
 
 The CNN backbone can initially remain frozen while the Transformer and feature projection layers learn the captioning task.
 
 The provided notebook uses:
 
-```bash
+```
 --fine_tune_start_epoch 8
 ```
 
@@ -386,21 +378,19 @@ This means the ResNet backbone is automatically unfrozen starting at epoch 8.
 
 The lower learning rate for the CNN backbone is:
 
-```text
+```
 1e-5
 ```
 
 while the rest of the model uses:
 
-```text
+```
 3e-4
 ```
 
 This allows the pretrained visual representation to be fine-tuned more conservatively.
 
----
-
-# 💾 Resume Training
+## 💾 Resume Training
 
 The training script supports resuming from a saved checkpoint.
 
@@ -414,7 +404,7 @@ This is particularly useful when training is interrupted by:
 
 Example:
 
-```bash
+```
 python train.py \
     --image_dir data/images \
     --captions_csv data/captions.txt \
@@ -431,13 +421,11 @@ The checkpoint stores:
 - CNN fine-tuning state
 - Model configuration
 
----
-
-# 🧪 Training Notebook
+## 🧪 Training Notebook
 
 The repository contains:
 
-```text
+```
 training.ipynb
 ```
 
@@ -453,19 +441,17 @@ The notebook was prepared for a Kaggle environment and performs the following op
 
 The notebook uses the Flickr30k dataset and trains for up to 20 epochs with:
 
-```bash
+```
 --batch_size 32
 --fine_tune_start_epoch 8
 --early_stopping_patience 4
 ```
 
----
-
-# 🗂️ Recommended GitHub Project Structure
+## 🗂️ Recommended GitHub Project Structure
 
 For the current Python imports and Flask application to work cleanly, the repository should use a package structure similar to:
 
-```text
+```
 image-caption-generator/
 │
 ├── app.py
@@ -497,114 +483,25 @@ image-caption-generator/
 │
 └── training.ipynb
 ```
-
-> **Important:** In the uploaded project archive, `caption_model.py`, `dataset.py`, and `index.html` were shown at the project root. However, the Python code imports `model.caption_model` and `data.dataset`, while Flask uses `render_template("index.html")`. Therefore, for the repository to match the current code, `caption_model.py` should be placed under `model/`, `dataset.py` under `data/`, and `index.html` under `templates/`.
-
 If the repository is already organized this way, no change is necessary.
 
----
-
-# ⚙️ Installation
-
-## 1. Clone the repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-cd YOUR_REPOSITORY
-```
-
-Replace the URL with your actual GitHub repository URL.
-
-## 2. Create a virtual environment
-
-### Windows
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
-
-### Linux/macOS
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-## 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-The project currently requires:
-
-```text
-torch
-torchvision
-Flask
-Pillow
-pandas
-tqdm
-streamlit
-```
-
-`streamlit` is included in the requirements file, although the provided application entry point is Flask.
-
----
-
-# 🚀 Running the Web Application Locally
-
-Make sure the following files exist:
-
-```text
-checkpoints/best.pt
-checkpoints/vocab.pkl
-```
-
-Then run:
-
-```bash
-python app.py
-```
-
-The Flask server is configured to listen on:
-
-```text
-0.0.0.0:5000
-```
-
-For local browser access, open:
-
-```text
-http://127.0.0.1:5000
-```
-
-or:
-
-```text
-http://localhost:5000
-```
-
----
-
-# 🔌 API
+## 🔌 API
 
 The application exposes:
 
-```http
+```
 POST /api/caption
 ```
 
 The request must contain an image in a multipart form field named:
 
-```text
+```
 image
 ```
 
 ## Example using cURL
 
-```bash
+```
 curl -X POST \
   -F "image=@path/to/image.jpg" \
   http://localhost:5000/api/caption
@@ -612,7 +509,7 @@ curl -X POST \
 
 Successful response:
 
-```json
+```
 {
   "caption": "generated caption goes here"
 }
@@ -620,7 +517,7 @@ Successful response:
 
 If no image is uploaded:
 
-```json
+```
 {
   "error": "No image uploaded"
 }
@@ -628,7 +525,7 @@ If no image is uploaded:
 
 If the uploaded file cannot be read:
 
-```json
+```
 {
   "error": "Could not read image file"
 }
@@ -636,9 +533,7 @@ If the uploaded file cannot be read:
 
 If the trained checkpoint or vocabulary is unavailable, the API returns HTTP status `503`.
 
----
-
-# 🖥️ Frontend
+## 🖥️ Frontend
 
 The browser interface is a lightweight HTML/CSS/JavaScript application.
 
@@ -654,7 +549,7 @@ The frontend:
 
 The frontend communicates with Flask using:
 
-```javascript
+```
 fetch('/api/caption', {
     method: 'POST',
     body: formData
@@ -663,15 +558,13 @@ fetch('/api/caption', {
 
 No separate frontend framework is required.
 
----
-
-# 🧪 Command-Line Caption Generation
+## 🧪 Command-Line Caption Generation
 
 Captions can also be generated without starting Flask.
 
 Use:
 
-```bash
+```
 python generate_caption.py \
     --image path/to/image.jpg \
     --checkpoint checkpoints/best.pt \
@@ -680,7 +573,7 @@ python generate_caption.py \
 
 Example:
 
-```bash
+```
 python generate_caption.py \
     --image test.jpg \
     --checkpoint checkpoints/best.pt \
@@ -689,31 +582,29 @@ python generate_caption.py \
 
 The default beam width is:
 
-```text
+```
 5
 ```
 
----
-
-# 🎯 Greedy Decoding vs Beam Search
+## 🎯 Greedy Decoding vs Beam Search
 
 The project supports two decoding methods.
 
-## Greedy decoding
+### Greedy decoding
 
 Set:
 
-```bash
+```
 --beam_width 1
 ```
 
 The model selects the highest-probability next token at every step.
 
-## Beam search
+### Beam search
 
 Use:
 
-```bash
+```
 --beam_width 5
 ```
 
@@ -721,15 +612,13 @@ Beam search keeps several candidate sequences during generation.
 
 The larger the beam width, the more candidate sequences are explored, but inference can become slower.
 
----
-
-# 📦 Checkpoints
+## 📦 Checkpoints
 
 The trained checkpoints are important deployment artifacts.
 
 Expected files:
 
-```text
+```
 checkpoints/
 ├── best.pt
 ├── last.pt
@@ -746,14 +635,14 @@ The provided trained files include:
 
 By default, Flask expects:
 
-```text
+```
 checkpoints/best.pt
 checkpoints/vocab.pkl
 ```
 
 The application also supports environment variables:
 
-```text
+```
 CHECKPOINT_PATH
 VOCAB_PATH
 ```
@@ -762,7 +651,7 @@ For example:
 
 ### Windows PowerShell
 
-```powershell
+```
 $env:CHECKPOINT_PATH="checkpoints/best.pt"
 $env:VOCAB_PATH="checkpoints/vocab.pkl"
 python app.py
@@ -770,15 +659,13 @@ python app.py
 
 ### Linux/macOS
 
-```bash
+```
 export CHECKPOINT_PATH="checkpoints/best.pt"
 export VOCAB_PATH="checkpoints/vocab.pkl"
 python app.py
 ```
 
----
-
-# 🌐 Online Deployment
+## 🌐 Online Deployment
 
 This project is designed to expose a Flask web application, so it can be deployed to a cloud platform that supports Python/Flask applications.
 
@@ -794,11 +681,11 @@ The deployment environment should provide:
 - Sufficient RAM for model inference
 - A publicly accessible HTTP port
 
-## Production server
+### Production server
 
 The current `app.py` uses Flask's built-in development server:
 
-```python
+```
 app.run(debug=True, host="0.0.0.0", port=5000)
 ```
 
@@ -817,8 +704,6 @@ gunicorn
 ```
 
 The exact start command depends on the hosting provider.
-
----
 
 # ⚠️ Important Deployment Considerations
 
