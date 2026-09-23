@@ -19,8 +19,6 @@ The project includes:
 - CPU/GPU automatic device selection
 - Saved trained model checkpoints
 
----
-
 ## 📌 Project Overview
 
 ### What does this project do?
