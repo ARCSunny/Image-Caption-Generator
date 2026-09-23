@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Captioner — describe any image</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #10131a;
+    --panel: #171b24;
+    --line: #262c39;
+    --ink: #eef0f4;
+    --ink-dim: #8c93a3;
+    --accent: #6ee7c2;
+    --accent-dim: #274a41;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 72px 24px 100px;
+  }
+  header{
+    margin-bottom: 56px;
+  }
+  .mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color: var(--ink-dim);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+  .mark .dot{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--accent);
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 42px;
+    line-height: 1.15;
+    margin: 0 0 16px;
+    letter-spacing: -0.01em;
+  }
+  h1 em{
+    font-style: normal;
+    color: var(--accent);
+  }
+  header p{
+    color: var(--ink-dim);
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  .stage{
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel);
+    overflow: hidden;
+  }
+
+  #dropzone{
+    padding: 56px 32px;
+    text-align:center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    border-bottom: 1px solid transparent;
+  }
+  #dropzone.drag{
+    background: var(--accent-dim);
+  }
+  #dropzone .icon{
+    width: 44px; height: 44px;
+    margin: 0 auto 20px;
+    border: 1.5px solid var(--ink-dim);
+    border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #dropzone .icon svg{ width:20px; height:20px; stroke: var(--ink-dim); }
+  #dropzone p{ margin:0 0 6px; font-size:15px; }
+  #dropzone .sub{ color: var(--ink-dim); font-size: 13px; }
+  #dropzone .sub button{
+    background:none; border:none; color: var(--accent);
+    font: inherit; cursor:pointer; padding:0; text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  input[type=file]{ display:none; }
+
+  #previewArea{ display:none; }
+  #previewArea.show{ display:block; }
+  #previewArea img{
+    width:100%;
+    max-height: 420px;
+    object-fit: contain;
+    background: #0b0d13;
+    display:block;
+  }
+
+  .result{
+    padding: 24px 28px;
+    border-top: 1px solid var(--line);
+  }
+  .result .label{
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 10px;
+  }
+  .caption-line{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 20px;
+    line-height: 1.5;
+    min-height: 30px;
+  }
+  .caption-line.placeholder{ color: var(--ink-dim); font-family: 'Inter', sans-serif; font-size: 15px; }
+  .caption-line .cursor{
+    display:inline-block; width:8px; height:20px;
+    background: var(--accent);
+    margin-left: 4px;
+    vertical-align: -3px;
+    animation: blink 0.9s steps(1) infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .actions{
+    display:flex; justify-content: space-between; align-items:center;
+    padding: 16px 28px 24px;
+  }
+  .actions button{
+    font: inherit; font-size: 13px;
+    background:none; border: 1px solid var(--line); color: var(--ink-dim);
+    padding: 9px 16px; border-radius: 7px; cursor:pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .actions button:hover{ border-color: var(--ink-dim); color: var(--ink); }
+
+  .error{
+    color: #e88888;
+    font-size: 14px;
+    padding: 18px 28px;
+    border-top: 1px solid var(--line);
+    display:none;
+  }
+  .error.show{ display:block; }
+
+  footer{
+    margin-top: 40px;
+    color: var(--ink-dim);
+    font-size: 13px;
+  }
+  footer code{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark"><span class="dot"></span>CNN encoder → transformer decoder</div>
+      <h1>Drop in a photo,<br>get its <em>caption</em>.</h1>
+      <p>A vision model reads the image, a transformer writes the sentence. </p>
+    </header>
+
+    <div class="stage">
+      <div id="dropzone">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 16V4M12 4l-4 4M12 4l4 4"/>
+            <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
+          </svg>
+        </div>
+        <p>Drag an image here</p>
+        <div class="sub">or <button type="button" id="browseBtn">choose a file</button></div>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+
+      <div id="previewArea">
+        <img id="previewImg" alt="Uploaded preview">
+      </div>
+
+      <div class="result">
+        <div class="label">Generated caption</div>
+        <div class="caption-line placeholder" id="captionLine">Waiting for an image…</div>
+      </div>
+
+      <div class="error" id="errorBox"></div>
+
+      <div class="actions" id="actionsBar" style="display:none;">
+        <button type="button" id="anotherBtn">Try another image</button>
+        <button type="button" id="regenBtn">Regenerate</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseBtn');
+  const previewArea = document.getElementById('previewArea');
+  const previewImg = document.getElementById('previewImg');
+  const captionLine = document.getElementById('captionLine');
+  const errorBox = document.getElementById('errorBox');
+  const actionsBar = document.getElementById('actionsBar');
+  const anotherBtn = document.getElementById('anotherBtn');
+  const regenBtn = document.getElementById('regenBtn');
+
+  let currentFile = null;
+
+  browseBtn.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('click', () => fileInput.click());
+
+  ['dragenter', 'dragover'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); })
+  );
+  dropzone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file){
+    if (!file.type.startsWith('image/')) return;
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewArea.classList.add('show');
+      actionsBar.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+    requestCaption(file);
+  }
+
+  function typeCaption(text){
+    captionLine.classList.remove('placeholder');
+    captionLine.innerHTML = '';
+    let i = 0;
+    const speed = 18;
+    function step(){
+      if (i <= text.length){
+        captionLine.textContent = text.slice(0, i);
+        i++;
+        setTimeout(step, speed);
+      }
+    }
+    step();
+  }
+
+  async function requestCaption(file){
+    errorBox.classList.remove('show');
+    captionLine.classList.add('placeholder');
+    captionLine.textContent = 'Generating…';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('/api/caption', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        captionLine.textContent = '';
+        errorBox.textContent = data.error || 'Something went wrong.';
+        errorBox.classList.add('show');
+        return;
+      }
+      typeCaption('"' + data.caption + '"');
+    } catch (err) {
+      captionLine.textContent = '';
+      errorBox.textContent = 'Could not reach the server. Is app.py running?';
+      errorBox.classList.add('show');
+    }
+  }
+
+  anotherBtn.addEventListener('click', () => {
+    currentFile = null;
+    fileInput.value = '';
+    previewArea.classList.remove('show');
+    actionsBar.style.display = 'none';
+    errorBox.classList.remove('show');
+    captionLine.classList.add('placeholder');
+    captionLine.textContent = 'Waiting for an image…';
+  });
+
+  regenBtn.addEventListener('click', () => {
+    if (currentFile) requestCaption(currentFile);
+  });
+</script>
+</body>
+</html>
