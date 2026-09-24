@@ -1,3 +1,7 @@
+<img width="1313" height="611" alt="App Screenshot 1" src="https://github.com/user-attachments/assets/e4c40120-040f-41d2-b539-f6f3490fcf30" />
+
+<img width="820" height="614" alt="App Screenshot 2" src="https://github.com/user-attachments/assets/1f43912a-741b-40be-823a-ba1ac34ca77f" />
+
 # 🖼️ Image Caption Generator
 
 An end-to-end **Image Captioning** application that generates a natural-language description for an uploaded image.
